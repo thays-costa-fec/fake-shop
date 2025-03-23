@@ -20,10 +20,25 @@ jobs:
         context: ./src
         push: true
         file: ./src/Dockerfile
-        tags: vercoza/fake-shop:v2.0
-    - run: echo "Teste"
+        tags: |
+          vercoza/fake-shop:v${{ github.run_number }}
+          vercoza/fake-shop:latest
   CD:
+    needs: ["CI"]
     runs-on: ubuntu-latest
     steps:
-    - run: echo "Teste"
+    - name: "Obtendo o código"
+      uses: actions/checkout@v4.2.2
+    - name: "Setando kubeconfig"
+      uses: azure/k8s-set-context@v4
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.K8S_KUBECONFIG }}
+    - name: "Realizando deploy"
+      uses: azure/k8s-deploy@v5
+      with:
+        manifests: |
+          k8s/deployment.yaml
+        images: |
+          vercoza/fake-shop:v${{ github.run_number }}
   
